@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Clock, MapPin, Lock } from 'lucide-react';
+import { Clock, MapPin, Lock, Pencil, Check, X, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -86,17 +86,17 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
   const [home, setHome] = useState(myPred ? String(myPred.home_score) : '');
   const [away, setAway] = useState(myPred ? String(myPred.away_score) : '');
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
 
   useEffect(() => {
-    if (myPred) {
-      setHome(String(myPred.home_score));
-      setAway(String(myPred.away_score));
-    }
+    setHome(myPred ? String(myPred.home_score) : '');
+    setAway(myPred ? String(myPred.away_score) : '');
   }, [myPred?.home_score, myPred?.away_score]);
 
   const locked = new Date(match.kickoff_at).getTime() - Date.now() < 60 * 60 * 1000;
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
+  const canEdit = canPredict && !locked && !isFinished && match.home_team && match.away_team;
 
   async function save() {
     setBusy(true);
@@ -106,6 +106,7 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
         away_score: Number(away),
       });
       toast.success('Palpite salvo!');
+      setEditing(false);
       onSaved();
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Erro ao salvar palpite.');
@@ -114,9 +115,15 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
     }
   }
 
+  function cancel() {
+    setHome(myPred ? String(myPred.home_score) : '');
+    setAway(myPred ? String(myPred.away_score) : '');
+    setEditing(false);
+  }
+
   return (
     <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
-      <Card className="space-y-4 min-h-[280px] flex flex-col">
+      <Card className={`space-y-4 min-h-[330px] flex flex-col ${myPred ? 'ring-1 ring-primary/40' : ''}`}>
         <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
           <span>{phases[match.phase]}</span>
           {isLive && <span className="text-red-500 font-bold animate-pulse">● AO VIVO</span>}
@@ -141,31 +148,48 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
           <span className="flex items-center gap-1"><MapPin className="h-3 w-3" />{match.stadium}</span>
         </div>
 
-        <div className="mt-auto pt-2 border-t border-border/40 space-y-2">
-          {myPred && (
-            <div className="text-xs flex items-center gap-2">
-              <span className="text-muted-foreground">Seu palpite:</span>
-              <span className="font-bold">{myPred.home_score} × {myPred.away_score}</span>
-              {isFinished && (
-                <span className={`ml-auto px-2 py-0.5 rounded text-xs font-bold ${myPred.exact ? 'bg-gold/20 text-gold' : myPred.winner ? 'bg-primary/20 text-primary' : 'bg-muted text-muted-foreground'}`}>
-                  +{myPred.points} pts
+        <div className="mt-auto pt-3 border-t border-border/40">
+          {!canPredict ? (
+            <div className="text-xs text-muted-foreground italic text-center py-2">Faça login para palpitar.</div>
+          ) : myPred && !editing ? (
+            <div className={`rounded-xl p-3 flex items-center gap-3 ${
+              isFinished
+                ? (myPred.exact ? 'bg-gold/10 ring-1 ring-gold/40' : myPred.winner ? 'bg-primary/10 ring-1 ring-primary/40' : 'bg-muted/40')
+                : 'bg-primary/10 ring-1 ring-primary/30'
+            }`}>
+              <Sparkles className={`h-5 w-5 ${isFinished && myPred.exact ? 'text-gold' : 'text-primary'}`} />
+              <div className="flex-1">
+                <div className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Seu palpite</div>
+                <div className="text-xl font-black leading-none mt-0.5">{myPred.home_score} <span className="text-muted-foreground">×</span> {myPred.away_score}</div>
+              </div>
+              {isFinished ? (
+                <span className={`px-3 py-1.5 rounded-lg text-sm font-black ${myPred.exact ? 'bg-gold text-black' : myPred.winner ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
+                  +{myPred.points}
                 </span>
+              ) : canEdit ? (
+                <Button size="icon" variant="ghost" onClick={() => setEditing(true)} title="Editar palpite">
+                  <Pencil className="h-4 w-4" />
+                </Button>
+              ) : null}
+            </div>
+          ) : canEdit ? (
+            <div className="flex items-center gap-2">
+              <Input inputMode="numeric" placeholder="0" value={home} onChange={(e) => setHome(clean(e.target.value))} className="w-16 text-center text-lg font-bold" />
+              <span className="text-muted-foreground font-bold">×</span>
+              <Input inputMode="numeric" placeholder="0" value={away} onChange={(e) => setAway(clean(e.target.value))} className="w-16 text-center text-lg font-bold" />
+              <Button size="icon" variant="premium" onClick={save} disabled={busy || home === '' || away === ''} className="ml-auto" title="Salvar">
+                <Check className="h-4 w-4" />
+              </Button>
+              {myPred && (
+                <Button size="icon" variant="ghost" onClick={cancel} title="Cancelar">
+                  <X className="h-4 w-4" />
+                </Button>
               )}
             </div>
-          )}
-          {canPredict && !locked && !isFinished && match.home_team && match.away_team ? (
-            <div className="flex items-center gap-2">
-              <Input inputMode="numeric" placeholder="0" value={home} onChange={(e) => setHome(clean(e.target.value))} className="w-16 text-center" />
-              <span className="text-muted-foreground">×</span>
-              <Input inputMode="numeric" placeholder="0" value={away} onChange={(e) => setAway(clean(e.target.value))} className="w-16 text-center" />
-              <Button size="sm" variant="premium" onClick={save} disabled={busy || home === '' || away === ''} className="ml-auto">
-                {busy ? '...' : myPred ? 'Atualizar' : 'Palpitar'}
-              </Button>
+          ) : (
+            <div className="text-xs text-amber-500 italic text-center py-2">
+              {isFinished ? 'Você não palpitou neste jogo.' : 'Palpites encerrados para esta partida.'}
             </div>
-          ) : !canPredict ? (
-            <div className="text-xs text-muted-foreground italic">Faça login para palpitar.</div>
-          ) : isFinished ? null : (
-            <div className="text-xs text-amber-500 italic">Palpites encerrados para esta partida.</div>
           )}
         </div>
       </Card>
