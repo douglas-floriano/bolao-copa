@@ -25,7 +25,7 @@ class MatchController extends Controller
             ->when($r->phase, fn ($q) => $q->where('phase', $r->phase))
             ->when($r->status, fn ($q) => $q->where('status', $r->status))
             ->orderBy('kickoff_at')
-            ->paginate(40);
+            ->paginate(min((int) $r->input('per_page', 100), 200));
     }
 
     public function show(MatchModel $match)
