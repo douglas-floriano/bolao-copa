@@ -33,6 +33,7 @@ export default function RankingPage() {
 
   useEffect(() => {
     if (!user) { router.push('/login'); return; }
+    if (!user.is_admin) { router.push('/leagues'); return; }
     load();
     const echo = getEcho();
     const ch = echo?.channel('championship.1');
@@ -40,7 +41,7 @@ export default function RankingPage() {
     return () => { ch?.stopListening('.ranking.updated'); };
   }, [user]);
 
-  if (!user) return null;
+  if (!user?.is_admin) return null;
 
   return (
     <div className="space-y-6">

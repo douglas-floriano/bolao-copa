@@ -11,9 +11,10 @@ const publicNav = [
   { href: '/standings', label: 'Tabela' },
 ];
 const authNav = [
-  { href: '/ranking', label: 'Ranking' },
   { href: '/leagues', label: 'Ligas' },
-  { href: '/dashboard', label: 'Meu Painel' },
+];
+const adminNav = [
+  { href: '/ranking', label: 'Ranking' },
 ];
 
 export function SiteHeader() {
@@ -39,6 +40,11 @@ export function SiteHeader() {
             </Link>
           ))}
           {mounted && user && authNav.map((n) => (
+            <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition">
+              {n.label}
+            </Link>
+          ))}
+          {mounted && user?.is_admin && adminNav.map((n) => (
             <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition">
               {n.label}
             </Link>
