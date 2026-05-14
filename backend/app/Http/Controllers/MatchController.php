@@ -11,7 +11,11 @@ class MatchController extends Controller
     public function index(Request $r)
     {
         $champ = Championship::where('active', true)->firstOrFail();
+        $userId = auth('sanctum')->user()?->id;
+
         return MatchModel::with(['homeTeam', 'awayTeam', 'group'])
+            ->withCount('predictions')
+            ->when($userId, fn ($q) => $q->with(['predictions' => fn ($p) => $p->where('user_id', $userId)]))
             ->where('championship_id', $champ->id)
             ->when($r->phase, fn ($q) => $q->where('phase', $r->phase))
             ->when($r->status, fn ($q) => $q->where('status', $r->status))

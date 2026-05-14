@@ -14,13 +14,13 @@ class StandingsService
         $teams = $group->teams;
         $matches = $group->matches()->where('status', 'finished')->get();
 
-        $rows = $teams->map(fn (Team $t) => $this->emptyRow($t));
+        $rows = $teams->map(fn (Team $t) => $this->emptyRow($t))->all();
 
         foreach ($matches as $m) {
             $this->apply($rows, $m);
         }
 
-        return $this->sortFifa($rows, $matches);
+        return $this->sortFifa(collect($rows), $matches);
     }
 
     private function emptyRow(Team $t): array
@@ -32,14 +32,14 @@ class StandingsService
         ];
     }
 
-    private function apply(Collection $rows, MatchModel $m): void
+    private function apply(array &$rows, MatchModel $m): void
     {
-        $home = $rows->firstWhere('team.id', $m->home_team_id);
-        $away = $rows->firstWhere('team.id', $m->away_team_id);
-        if (!$home || !$away) return;
-
-        $hi = $rows->search(fn ($r) => $r['team']->id === $home['team']->id);
-        $ai = $rows->search(fn ($r) => $r['team']->id === $away['team']->id);
+        $hi = $ai = null;
+        foreach ($rows as $i => $r) {
+            if ($r['team']->id === $m->home_team_id) $hi = $i;
+            if ($r['team']->id === $m->away_team_id) $ai = $i;
+        }
+        if ($hi === null || $ai === null) return;
 
         $rows[$hi]['J']++; $rows[$ai]['J']++;
         $rows[$hi]['GP'] += $m->home_score; $rows[$hi]['GC'] += $m->away_score;
