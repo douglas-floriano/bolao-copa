@@ -44,10 +44,20 @@ function AdminMatchRow({ match, onSaved }: { match: any; onSaved: () => void }) 
 
   async function save(status: string) {
     try {
-      await api.put(`/admin/matches/${match.id}/result`, {
-        home_score: Number(h), away_score: Number(a), status,
-      });
-      toast.success('Resultado salvo · ranking recalculado');
+      const payload: any = { status };
+      if (status === 'scheduled') {
+        payload.home_score = null;
+        payload.away_score = null;
+      } else {
+        payload.home_score = Number(h);
+        payload.away_score = Number(a);
+      }
+      await api.put(`/admin/matches/${match.id}/result`, payload);
+      toast.success(
+        status === 'scheduled' ? 'Status revertido para Agendado' :
+        status === 'live' ? 'Marcado como Ao vivo' :
+        'Resultado salvo · ranking recalculado'
+      );
       onSaved();
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Erro');
@@ -63,7 +73,13 @@ function AdminMatchRow({ match, onSaved }: { match: any; onSaved: () => void }) 
       <Input type="number" min={0} value={h} onChange={(e) => setH(e.target.value)} className="w-20 text-center" />
       <span>×</span>
       <Input type="number" min={0} value={a} onChange={(e) => setA(e.target.value)} className="w-20 text-center" />
-      <Button size="sm" variant="outline" onClick={() => save('live')}>Ao vivo</Button>
+      <span className={`text-xs font-bold px-2 py-1 rounded ${match.status === 'live' ? 'bg-red-500/20 text-red-500 animate-pulse' : match.status === 'finished' ? 'bg-emerald-500/20 text-emerald-500' : 'bg-muted text-muted-foreground'}`}>
+        {match.status === 'live' ? 'AO VIVO' : match.status === 'finished' ? 'ENCERRADO' : 'AGENDADO'}
+      </span>
+      {match.status !== 'scheduled' && (
+        <Button size="sm" variant="ghost" onClick={() => save('scheduled')}>Reverter</Button>
+      )}
+      <Button size="sm" variant="outline" onClick={() => save('live')} disabled={match.status === 'live'}>Ao vivo</Button>
       <Button size="sm" variant="premium" onClick={() => save('finished')}>Encerrar</Button>
     </Card>
   );
