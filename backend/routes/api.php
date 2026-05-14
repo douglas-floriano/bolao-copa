@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Admin\AdminChampionshipController;
 use App\Http\Controllers\Admin\AdminMatchController;
+use App\Http\Controllers\Admin\AdminUserController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\LeagueController;
 use App\Http\Controllers\MatchController;
@@ -34,5 +35,9 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::middleware('admin')->prefix('admin')->group(function () {
         Route::put('matches/{match}/result',          [AdminMatchController::class, 'updateResult']);
         Route::put('championships/{championship}',    [AdminChampionshipController::class, 'update']);
+        Route::get('users',                            [AdminUserController::class, 'index']);
+        Route::post('users',                           [AdminUserController::class, 'store']);
+        Route::put('users/{user}',                     [AdminUserController::class, 'update']);
+        Route::delete('users/{user}',                  [AdminUserController::class, 'destroy']);
     });
 });

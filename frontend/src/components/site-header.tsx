@@ -5,10 +5,12 @@ import { Moon, Sun, Trophy, Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/store/auth';
 
-const navItems = [
+const publicNav = [
   { href: '/matches', label: 'Jogos' },
   { href: '/standings', label: 'Tabela' },
   { href: '/ranking', label: 'Ranking' },
+];
+const authNav = [
   { href: '/leagues', label: 'Ligas' },
   { href: '/dashboard', label: 'Meu Painel' },
 ];
@@ -28,12 +30,13 @@ export function SiteHeader() {
         </Link>
 
         <nav className="hidden md:flex items-center gap-1">
-          {navItems.map((n) => (
-            <Link
-              key={n.href}
-              href={n.href}
-              className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition"
-            >
+          {publicNav.map((n) => (
+            <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition">
+              {n.label}
+            </Link>
+          ))}
+          {user && authNav.map((n) => (
+            <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition">
               {n.label}
             </Link>
           ))}
