@@ -27,9 +27,12 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::put('matches/{match}/prediction',        [PredictionController::class, 'upsert']);
     Route::delete('matches/{match}/prediction',     [PredictionController::class, 'destroy']);
 
-    Route::get('leagues',          [LeagueController::class, 'index']);
-    Route::post('leagues',         [LeagueController::class, 'store']);
-    Route::post('leagues/join',    [LeagueController::class, 'join']);
+    Route::get('leagues',                 [LeagueController::class, 'index']);
+    Route::post('leagues',                [LeagueController::class, 'store']);
+    Route::get('leagues/{league}',        [LeagueController::class, 'show']);
+    Route::put('leagues/{league}',        [LeagueController::class, 'update']);
+    Route::post('leagues/join',           [LeagueController::class, 'join']);
+    Route::put('leagues/{league}/members/{user}/payment', [LeagueController::class, 'setMemberPayment']);
     Route::get('leagues/{league}/ranking', [RankingController::class, 'league']);
 
     Route::middleware('admin')->prefix('admin')->group(function () {

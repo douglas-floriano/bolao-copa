@@ -36,7 +36,7 @@ class RankingController extends Controller
 
     public function league(League $league)
     {
-        return DB::table('league_user')
+        $rows = DB::table('league_user')
             ->join('users', 'users.id', '=', 'league_user.user_id')
             ->leftJoin('predictions', 'predictions.user_id', '=', 'users.id')
             ->leftJoin('matches', function ($j) use ($league) {
@@ -44,12 +44,27 @@ class RankingController extends Controller
                   ->where('matches.championship_id', $league->championship_id);
             })
             ->where('league_user.league_id', $league->id)
-            ->groupBy('users.id', 'users.name', 'users.avatar', 'users.level')
+            ->groupBy('users.id', 'users.name', 'users.avatar', 'users.level', 'league_user.entry_paid', 'league_user.paid')
             ->select(
                 'users.id', 'users.name', 'users.avatar', 'users.level',
+                'league_user.entry_paid', 'league_user.paid',
                 DB::raw('COALESCE(SUM(predictions.points),0) as points'),
             )
             ->orderByDesc('points')
             ->get();
+
+        $pool = (float) $league->members()->sum('entry_paid');
+        $prizes = collect($league->prize_distribution ?? [])->keyBy('position');
+
+        return $rows->values()->map(function ($r, $idx) use ($pool, $prizes) {
+            $pos = $idx + 1;
+            $pct = $prizes[$pos]['percent'] ?? 0;
+            return [
+                ...(array) $r,
+                'position' => $pos,
+                'prize_percent' => $pct,
+                'prize_amount' => round($pool * ($pct / 100), 2),
+            ];
+        });
     }
 }

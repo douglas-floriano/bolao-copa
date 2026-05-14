@@ -7,8 +7,20 @@ use Illuminate\Support\Str;
 
 class League extends Model
 {
-    protected $fillable = ['championship_id', 'owner_id', 'name', 'invite_code', 'description', 'is_public'];
-    protected $casts = ['is_public' => 'boolean'];
+    protected $fillable = [
+        'championship_id', 'owner_id', 'name', 'invite_code', 'description', 'is_public',
+        'entry_fee', 'prize_distribution', 'currency',
+    ];
+    protected $casts = [
+        'is_public' => 'boolean',
+        'entry_fee' => 'decimal:2',
+        'prize_distribution' => 'array',
+    ];
+
+    public function totalPool(): float
+    {
+        return (float) $this->members()->sum('entry_paid');
+    }
 
     protected static function booted(): void
     {
@@ -19,5 +31,5 @@ class League extends Model
 
     public function owner() { return $this->belongsTo(User::class, 'owner_id'); }
     public function championship() { return $this->belongsTo(Championship::class); }
-    public function members() { return $this->belongsToMany(User::class)->withPivot('joined_at'); }
+    public function members() { return $this->belongsToMany(User::class)->withPivot('joined_at', 'entry_paid', 'paid'); }
 }
