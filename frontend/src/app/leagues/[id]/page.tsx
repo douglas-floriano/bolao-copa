@@ -7,6 +7,7 @@ import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { useAuth } from '@/store/auth';
 
 type RankRow = {
@@ -152,6 +153,7 @@ export default function LeagueDetailPage() {
                 <th className="text-right">Pontos</th>
                 <th className="text-center">Pagamento</th>
                 <th className="text-right pr-2">Prêmio</th>
+                {user.is_admin && <th></th>}
               </tr>
             </thead>
             <tbody>
@@ -188,6 +190,11 @@ export default function LeagueDetailPage() {
                     <td className="text-right pr-2 font-black text-gold">
                       {r.prize_amount > 0 ? fmt(r.prize_amount) : <span className="text-muted-foreground font-normal">—</span>}
                     </td>
+                    {user.is_admin && (
+                      <td className="text-right">
+                        <PayEditor leagueId={Number(id)} row={r} onSaved={load} />
+                      </td>
+                    )}
                   </tr>
                 );
               })}
@@ -195,6 +202,62 @@ export default function LeagueDetailPage() {
           </table>
         </div>
       </Card>
+    </div>
+  );
+}
+
+function PayEditor({ leagueId, row, onSaved }: { leagueId: number; row: RankRow; onSaved: () => void }) {
+  const [open, setOpen] = useState(false);
+  const [val, setVal] = useState(String(row.entry_paid ?? 0));
+  const [paid, setPaid] = useState(row.paid);
+  const [busy, setBusy] = useState(false);
+
+  useEffect(() => {
+    setVal(String(row.entry_paid ?? 0));
+    setPaid(row.paid);
+  }, [row.entry_paid, row.paid]);
+
+  async function save() {
+    setBusy(true);
+    try {
+      await api.put(`/leagues/${leagueId}/members/${row.id}/payment`, {
+        entry_paid: Number(val || 0),
+        paid,
+      });
+      toast.success(`${row.name}: ${fmt(Number(val))}${paid ? ' (pago)' : ''}`);
+      setOpen(false);
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Erro');
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  if (!open) {
+    return (
+      <Button size="sm" variant="outline" onClick={() => setOpen(true)} className="text-xs">
+        Editar
+      </Button>
+    );
+  }
+  return (
+    <div className="flex items-center gap-1 justify-end">
+      <Input
+        type="number"
+        min="0"
+        step="0.01"
+        value={val}
+        onChange={(e) => setVal(e.target.value)}
+        className="w-24 h-8 text-xs text-right"
+        autoFocus
+      />
+      <label className="flex items-center gap-1 text-[10px] cursor-pointer select-none px-1">
+        <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />
+        pago
+      </label>
+      <Button size="sm" variant="premium" onClick={save} disabled={busy} className="h-8 px-2">✓</Button>
+      <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="h-8 px-2">✗</Button>
     </div>
   );
 }
