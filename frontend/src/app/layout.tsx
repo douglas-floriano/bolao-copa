@@ -1,7 +1,7 @@
 import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
-import { SiteHeader } from '@/components/site-header';
+import { SiteHeaderDynamic } from '@/components/site-header-client';
 import { Toaster } from 'sonner';
 
 export const metadata: Metadata = {
@@ -15,7 +15,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <body suppressHydrationWarning>
         <ThemeProvider>
           <div className="min-h-screen bg-hero-gradient">
-            <SiteHeader />
+            <SiteHeaderDynamic />
             <main className="container py-8">{children}</main>
           </div>
           <Toaster richColors position="top-right" />
