@@ -1,7 +1,8 @@
 'use client';
+import { useEffect, useState } from 'react';
 import Link from 'next/link';
 import { useTheme } from 'next-themes';
-import { Moon, Sun, Trophy, Menu } from 'lucide-react';
+import { Moon, Sun, Trophy } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/store/auth';
 
@@ -18,6 +19,8 @@ const authNav = [
 export function SiteHeader() {
   const { theme, setTheme } = useTheme();
   const { user, clear } = useAuth();
+  const [mounted, setMounted] = useState(false);
+  useEffect(() => setMounted(true), []);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/70 backdrop-blur-xl">
@@ -48,18 +51,18 @@ export function SiteHeader() {
         </nav>
 
         <div className="flex items-center gap-2">
-          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}>
-            {theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />}
+          <Button variant="ghost" size="icon" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')} aria-label="theme">
+            {mounted ? (theme === 'dark' ? <Sun className="h-4 w-4" /> : <Moon className="h-4 w-4" />) : <span className="h-4 w-4" />}
           </Button>
-          {user ? (
+          {mounted && user ? (
             <Button variant="outline" size="sm" onClick={clear}>
               Sair
             </Button>
-          ) : (
+          ) : mounted ? (
             <Button asChild size="sm" variant="premium">
               <Link href="/login">Entrar</Link>
             </Button>
-          )}
+          ) : null}
         </div>
       </div>
     </header>
