@@ -124,13 +124,13 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
           {locked && !isFinished && !isLive && <span className="flex items-center gap-1 text-amber-500"><Lock className="h-3 w-3" /> Travado</span>}
         </div>
 
-        <div className="grid grid-cols-3 items-center gap-3">
+        <div className="grid grid-cols-3 items-center gap-3 min-h-[90px]">
           <TeamSide team={match.home_team} placeholder={match.home_placeholder} side="home" />
-          <div className="text-center">
+          <div className="text-center flex items-center justify-center h-full">
             {match.home_score !== null && match.away_score !== null ? (
               <div className="text-4xl font-black">{match.home_score}<span className="text-muted-foreground mx-2">×</span>{match.away_score}</div>
             ) : (
-              <div className="text-2xl font-black text-muted-foreground">VS</div>
+              <div className="text-3xl font-black text-muted-foreground">VS</div>
             )}
           </div>
           <TeamSide team={match.away_team} placeholder={match.away_placeholder} side="away" />
@@ -173,19 +173,20 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
   );
 }
 
-function TeamSide({ team, placeholder, side }: { team: Team | null; placeholder?: string | null; side: 'home' | 'away' }) {
+function TeamSide({ team, placeholder }: { team: Team | null; placeholder?: string | null; side?: string }) {
   if (!team) {
     return (
-      <div className={`flex flex-col items-center text-center ${side === 'away' ? 'order-3' : ''}`}>
-        <div className="w-14 h-14 rounded-full bg-muted/40 flex items-center justify-center text-xs text-muted-foreground">
+      <div className="flex flex-col items-center text-center h-[80px] justify-start">
+        <div className="w-14 h-10 rounded bg-muted/40 flex items-center justify-center text-xs text-muted-foreground">
           {placeholder ?? '?'}
         </div>
-        <span className="text-xs text-muted-foreground mt-1">A definir</span>
+        <span className="text-sm font-bold mt-1">—</span>
+        <span className="text-xs text-muted-foreground">A definir</span>
       </div>
     );
   }
   return (
-    <div className={`flex flex-col items-center text-center`}>
+    <div className="flex flex-col items-center text-center h-[80px] justify-start">
       <Image src={team.flag} width={56} height={40} alt={team.code} className="rounded-md shadow-md" unoptimized />
       <span className="text-sm font-bold mt-1">{team.code}</span>
       <span className="text-xs text-muted-foreground line-clamp-1">{team.name}</span>
