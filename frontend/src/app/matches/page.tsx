@@ -33,41 +33,61 @@ export default function MatchesPage() {
   const [matches, setMatches] = useState<Match[]>([]);
   const [loading, setLoading] = useState(true);
   const [phaseFilter, setPhaseFilter] = useState<string>('group');
+  const [predFilter, setPredFilter] = useState<'all' | 'pending' | 'done'>('all');
 
   async function load() {
     setLoading(true);
-    const { data } = await api.get('/matches', { params: { phase: phaseFilter } });
+    const { data } = await api.get('/matches', { params: { phase: phaseFilter, per_page: 100 } });
     setMatches(data.data ?? data);
     setLoading(false);
   }
 
   useEffect(() => { load(); }, [phaseFilter]);
 
+  const filtered = matches.filter((m) => {
+    if (predFilter === 'all') return true;
+    const has = (m.predictions?.length ?? 0) > 0;
+    return predFilter === 'done' ? has : !has;
+  });
+
   return (
     <div className="space-y-6">
-      <header className="flex items-center justify-between flex-wrap gap-3">
-        <h1 className="text-3xl font-black">Jogos</h1>
-        <div className="flex gap-2 flex-wrap">
-          {Object.entries(phases).map(([k, v]) => (
-            <Button
-              key={k}
-              size="sm"
-              variant={phaseFilter === k ? 'premium' : 'outline'}
-              onClick={() => setPhaseFilter(k)}
-            >
-              {v}
-            </Button>
-          ))}
+      <header className="space-y-3">
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <h1 className="text-3xl font-black">Jogos</h1>
+          <div className="flex gap-2 flex-wrap">
+            {Object.entries(phases).map(([k, v]) => (
+              <Button key={k} size="sm" variant={phaseFilter === k ? 'premium' : 'outline'} onClick={() => setPhaseFilter(k)}>
+                {v}
+              </Button>
+            ))}
+          </div>
         </div>
+        {user && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-xs text-muted-foreground uppercase tracking-wider">Palpites:</span>
+            {[
+              { k: 'all',     l: `Todos (${matches.length})` },
+              { k: 'pending', l: `Sem palpite (${matches.filter((m) => !(m.predictions?.length)).length})` },
+              { k: 'done',    l: `Já palpitei (${matches.filter((m) => (m.predictions?.length ?? 0) > 0).length})` },
+            ].map(({ k, l }) => (
+              <Button key={k} size="sm" variant={predFilter === k ? 'default' : 'ghost'} onClick={() => setPredFilter(k as any)}>
+                {l}
+              </Button>
+            ))}
+          </div>
+        )}
       </header>
 
       {loading ? (
         <div className="grid md:grid-cols-2 gap-4">
           {Array.from({ length: 6 }).map((_, i) => <Skeleton key={i} className="h-32" />)}
         </div>
+      ) : filtered.length === 0 ? (
+        <div className="text-center text-muted-foreground py-12">Nenhum jogo nesta seleção.</div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
-          {matches.map((m) => (
+          {filtered.map((m) => (
               <MatchCard
                 key={m.id}
                 match={m}
