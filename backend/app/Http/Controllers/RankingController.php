@@ -14,12 +14,13 @@ class RankingController extends Controller
     {
         $champ = Championship::where('active', true)->firstOrFail();
 
-        $rows = DB::table('users')
+        return DB::table('users')
             ->leftJoin('predictions', 'predictions.user_id', '=', 'users.id')
             ->leftJoin('matches', 'matches.id', '=', 'predictions.match_id')
             ->where(function ($q) use ($champ) {
                 $q->whereNull('matches.id')->orWhere('matches.championship_id', $champ->id);
             })
+            ->where('users.is_admin', false)
             ->groupBy('users.id', 'users.name', 'users.avatar', 'users.level')
             ->select(
                 'users.id', 'users.name', 'users.avatar', 'users.level',
@@ -31,55 +32,6 @@ class RankingController extends Controller
             ->orderByDesc('exact_count')
             ->limit(200)
             ->get();
-
-        // Calcular prêmio total de cada usuário (somando posição nas ligas que participa)
-        $prizeMap = $this->computePrizesPerUser($champ->id);
-
-        return $rows->map(function ($r) use ($prizeMap) {
-            $r->total_prize = $prizeMap[$r->id] ?? 0;
-            $r->prize_leagues = $prizeMap['_detail'][$r->id] ?? [];
-            return $r;
-        });
-    }
-
-    private function computePrizesPerUser(int $championshipId): array
-    {
-        $result = ['_detail' => []];
-        $leagues = League::where('championship_id', $championshipId)->where('entry_fee', '>', 0)->get();
-
-        foreach ($leagues as $league) {
-            $pool = (float) $league->members()->sum('entry_paid');
-            if ($pool <= 0) continue;
-            $prizes = collect($league->prize_distribution ?? [])->keyBy('position');
-            if ($prizes->isEmpty()) continue;
-
-            // Ranking interno da liga
-            $ranking = DB::table('league_user')
-                ->join('users', 'users.id', '=', 'league_user.user_id')
-                ->leftJoin('predictions', 'predictions.user_id', '=', 'users.id')
-                ->leftJoin('matches', function ($j) use ($championshipId) {
-                    $j->on('matches.id', '=', 'predictions.match_id')
-                      ->where('matches.championship_id', $championshipId);
-                })
-                ->where('league_user.league_id', $league->id)
-                ->groupBy('users.id')
-                ->select('users.id', DB::raw('COALESCE(SUM(predictions.points),0) as points'))
-                ->orderByDesc('points')
-                ->get();
-
-            foreach ($ranking as $idx => $u) {
-                $pos = $idx + 1;
-                if (!isset($prizes[$pos])) continue;
-                $amount = round($pool * ($prizes[$pos]['percent'] / 100), 2);
-                $result[$u->id] = ($result[$u->id] ?? 0) + $amount;
-                $result['_detail'][$u->id][] = [
-                    'league' => $league->name,
-                    'position' => $pos,
-                    'amount' => $amount,
-                ];
-            }
-        }
-        return $result;
     }
 
     public function league(League $league)

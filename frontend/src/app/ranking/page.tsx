@@ -9,15 +9,10 @@ import { Skeleton } from '@/components/ui/skeleton';
 import { getEcho } from '@/lib/echo';
 import { useAuth } from '@/store/auth';
 
-type PrizeDetail = { league: string; position: number; amount: number };
 type Row = {
   id: number; name: string; avatar?: string; level: number;
   points: number; exact_count: number; winner_count: number;
-  total_prize?: number;
-  prize_leagues?: PrizeDetail[];
 };
-
-const fmt = (n: number) => `R$ ${Number(n).toFixed(2).replace('.', ',')}`;
 
 export default function RankingPage() {
   const { user } = useAuth();
@@ -79,12 +74,6 @@ export default function RankingPage() {
                   <div className="text-2xl font-black text-primary">{r.points}</div>
                   <div className="text-xs text-muted-foreground">pontos</div>
                 </div>
-                {!!r.total_prize && r.total_prize > 0 && (
-                  <div className="text-right border-l border-border/40 pl-4" title={r.prize_leagues?.map((p) => `${p.league}: ${p.position}º ${fmt(p.amount)}`).join('\n')}>
-                    <div className="text-lg font-black text-gold">{fmt(r.total_prize)}</div>
-                    <div className="text-xs text-muted-foreground">prêmio</div>
-                  </div>
-                )}
               </Card>
             </motion.div>
           ))}
