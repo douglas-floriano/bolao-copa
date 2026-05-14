@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import { Clock, MapPin, Lock, Pencil, Check, X, Sparkles } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
@@ -67,8 +67,7 @@ export default function MatchesPage() {
         </div>
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
-          <AnimatePresence>
-            {matches.map((m) => (
+          {matches.map((m) => (
               <MatchCard
                 key={m.id}
                 match={m}
@@ -84,7 +83,6 @@ export default function MatchesPage() {
                 }}
               />
             ))}
-          </AnimatePresence>
         </div>
       )}
     </div>
@@ -136,7 +134,7 @@ function MatchCard({ match, canPredict, onLocalSave }: { match: Match; canPredic
   }
 
   return (
-    <motion.div layout initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0 }}>
+    <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}>
       <Card className={`space-y-4 min-h-[330px] flex flex-col ${myPred ? 'ring-1 ring-primary/40' : ''}`}>
         <div className="flex items-center justify-between text-xs uppercase tracking-wider text-muted-foreground">
           <span>{phases[match.phase]}</span>
