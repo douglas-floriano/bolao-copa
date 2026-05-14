@@ -32,6 +32,7 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('leagues/{league}',        [LeagueController::class, 'show']);
     Route::put('leagues/{league}',        [LeagueController::class, 'update']);
     Route::post('leagues/join',           [LeagueController::class, 'join']);
+    Route::delete('leagues/{league}/leave', [LeagueController::class, 'leave']);
     Route::put('leagues/{league}/members/{user}/payment', [LeagueController::class, 'setMemberPayment']);
     Route::get('leagues/{league}/ranking', [RankingController::class, 'league']);
 

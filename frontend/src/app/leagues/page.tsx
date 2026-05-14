@@ -78,6 +78,7 @@ export default function LeaguesPage() {
       <h1 className="text-3xl font-black">Ligas privadas</h1>
 
       <div className="grid md:grid-cols-2 gap-4">
+        {user.is_admin && (
         <Card>
           <CardHeader>
             <CardTitle className="flex items-center gap-2"><Trophy className="h-5 w-5 text-primary" /> Criar nova liga</CardTitle>
@@ -120,8 +121,9 @@ export default function LeaguesPage() {
             <Button variant="premium" className="w-full" onClick={create}>Criar liga</Button>
           </div>
         </Card>
+        )}
 
-        <Card>
+        <Card className={user.is_admin ? '' : 'md:col-span-2'}>
           <CardHeader><CardTitle>Entrar com convite</CardTitle></CardHeader>
           <div className="flex gap-2">
             <Input placeholder="Código de convite" value={code} onChange={(e) => setCode(e.target.value.toUpperCase())} />
@@ -132,17 +134,36 @@ export default function LeaguesPage() {
 
       <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-4">
         {leagues.map((l) => (
-          <Link key={l.id} href={`/leagues/${l.id}`}>
-            <Card className="hover:ring-2 hover:ring-primary/40 transition cursor-pointer">
+          <Card key={l.id} className="hover:ring-2 hover:ring-primary/40 transition">
+            <Link href={`/leagues/${l.id}`}>
               <CardHeader>
-                <CardTitle>{l.name}</CardTitle>
+                <CardTitle className="cursor-pointer">{l.name}</CardTitle>
                 <p className="text-xs text-muted-foreground">
                   Entrada R$ {Number(l.entry_fee ?? 0).toFixed(2)}
                 </p>
               </CardHeader>
-              <p className="text-sm text-muted-foreground">Convite: <code className="bg-muted/40 px-2 py-1 rounded text-xs">{l.invite_code}</code></p>
-            </Card>
-          </Link>
+              <p className="text-sm text-muted-foreground cursor-pointer">Convite: <code className="bg-muted/40 px-2 py-1 rounded text-xs">{l.invite_code}</code></p>
+            </Link>
+            {l.owner_id !== user.id && (
+              <Button
+                size="sm"
+                variant="ghost"
+                className="mt-3 text-destructive hover:bg-destructive/10"
+                onClick={async () => {
+                  if (!confirm(`Sair da liga "${l.name}"?`)) return;
+                  try {
+                    await api.delete(`/leagues/${l.id}/leave`);
+                    toast.success('Você saiu da liga');
+                    load();
+                  } catch (e: any) {
+                    toast.error(e?.response?.data?.message ?? 'Erro');
+                  }
+                }}
+              >
+                Sair da liga
+              </Button>
+            )}
+          </Card>
         ))}
       </div>
     </div>

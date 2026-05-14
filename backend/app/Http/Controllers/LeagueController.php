@@ -15,6 +15,8 @@ class LeagueController extends Controller
 
     public function store(Request $r)
     {
+        abort_unless($r->user()->is_admin, 403, 'Apenas administradores podem criar ligas.');
+
         $data = $r->validate([
             'name' => 'required|string|max:80',
             'description' => 'nullable|string|max:255',
@@ -84,6 +86,13 @@ class LeagueController extends Controller
             $r->user()->id => ['entry_paid' => $league->entry_fee ?? 0],
         ]);
         return response()->json($league);
+    }
+
+    public function leave(Request $r, League $league)
+    {
+        abort_if($league->owner_id === $r->user()->id, 422, 'Dono não pode sair da própria liga.');
+        $league->members()->detach($r->user()->id);
+        return response()->noContent();
     }
 
     public function setMemberPayment(Request $r, League $league, \App\Models\User $user)
