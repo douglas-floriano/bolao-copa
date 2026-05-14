@@ -1,7 +1,7 @@
 'use client';
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
-import { Trophy, Medal, Award, Coins, Copy, Check, Users, Crown, TrendingUp } from 'lucide-react';
+import { Trophy, Medal, Award, Coins, Copy, Check, Users, Crown, TrendingUp, Settings, Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 import { motion } from 'framer-motion';
 import { api } from '@/lib/api';
@@ -31,6 +31,7 @@ export default function LeagueDetailPage() {
   const [data, setData] = useState<LeagueData | null>(null);
   const [rank, setRank] = useState<RankRow[]>([]);
   const [copied, setCopied] = useState(false);
+  const [editOpen, setEditOpen] = useState(false);
 
   async function load() {
     const [{ data: det }, { data: r }] = await Promise.all([
@@ -79,12 +80,27 @@ export default function LeagueDetailPage() {
               <span>Entrada {fmt(Number(data.league.entry_fee ?? 0))}</span>
             </div>
           </div>
-          <Button variant="outline" onClick={copyInvite} className="gap-2">
-            {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
-            <code className="font-mono">{data.league.invite_code}</code>
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={copyInvite} className="gap-2">
+              {copied ? <Check className="h-4 w-4" /> : <Copy className="h-4 w-4" />}
+              <code className="font-mono">{data.league.invite_code}</code>
+            </Button>
+            {user.is_admin && (
+              <Button variant="premium" onClick={() => setEditOpen(true)} className="gap-2">
+                <Settings className="h-4 w-4" /> Configurar liga
+              </Button>
+            )}
+          </div>
         </div>
       </motion.header>
+
+      {user.is_admin && editOpen && (
+        <LeagueEditor
+          league={data.league}
+          onClose={() => setEditOpen(false)}
+          onSaved={() => { setEditOpen(false); load(); }}
+        />
+      )}
 
       {myRow && (
         <Card className="bg-gradient-to-r from-primary/10 to-transparent border-primary/30">
@@ -203,6 +219,105 @@ export default function LeagueDetailPage() {
         </div>
       </Card>
     </div>
+  );
+}
+
+function LeagueEditor({ league, onClose, onSaved }: { league: any; onClose: () => void; onSaved: () => void }) {
+  const [name, setName] = useState(league.name);
+  const [description, setDescription] = useState(league.description ?? '');
+  const [entryFee, setEntryFee] = useState(String(league.entry_fee ?? 0));
+  const [prizes, setPrizes] = useState<{ position: number; percent: number }[]>(
+    league.prize_distribution ?? [{ position: 1, percent: 60 }, { position: 2, percent: 30 }, { position: 3, percent: 10 }],
+  );
+  const [busy, setBusy] = useState(false);
+
+  const totalPct = prizes.reduce((s, p) => s + Number(p.percent || 0), 0);
+
+  function setPct(i: number, v: string) {
+    setPrizes(prizes.map((p, idx) => idx === i ? { ...p, percent: Number(v) } : p));
+  }
+  function addPrize() {
+    setPrizes([...prizes, { position: prizes.length + 1, percent: 0 }]);
+  }
+  function rmPrize(i: number) {
+    setPrizes(prizes.filter((_, idx) => idx !== i).map((p, idx) => ({ ...p, position: idx + 1 })));
+  }
+
+  async function save() {
+    if (Math.abs(totalPct - 100) > 0.01) {
+      return toast.error(`Soma deve ser 100% (atual: ${totalPct}%)`);
+    }
+    setBusy(true);
+    try {
+      await api.put(`/leagues/${league.id}`, {
+        name,
+        description: description || null,
+        entry_fee: Number(entryFee || 0),
+        prize_distribution: prizes,
+      });
+      toast.success('Liga atualizada');
+      onSaved();
+    } catch (e: any) {
+      toast.error(e?.response?.data?.message ?? 'Erro');
+    } finally { setBusy(false); }
+  }
+
+  return (
+    <Card className="ring-2 ring-primary/40">
+      <CardHeader>
+        <div className="flex items-center justify-between">
+          <CardTitle>Configurar liga</CardTitle>
+          <Button size="icon" variant="ghost" onClick={onClose}><X className="h-4 w-4" /></Button>
+        </div>
+      </CardHeader>
+
+      <div className="grid md:grid-cols-2 gap-4">
+        <div className="space-y-3">
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">Nome</label>
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">Descrição</label>
+            <Input value={description} onChange={(e) => setDescription(e.target.value)} placeholder="Opcional" />
+          </div>
+          <div>
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">Valor da entrada (R$)</label>
+            <Input type="number" min="0" step="0.01" value={entryFee} onChange={(e) => setEntryFee(e.target.value)} />
+            <p className="text-[10px] text-muted-foreground mt-1">
+              Alterar não muda o que cada membro já pagou. Edite pagamento individual na tabela.
+            </p>
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          <div className="flex items-center justify-between">
+            <label className="text-xs text-muted-foreground uppercase tracking-wider">Distribuição dos prêmios</label>
+            <Button size="sm" variant="ghost" onClick={addPrize}><Plus className="h-3 w-3" /> Adicionar</Button>
+          </div>
+          <div className="space-y-2">
+            {prizes.map((p, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <span className="text-sm font-bold w-10">{p.position}º</span>
+                <Input type="number" min="0" max="100" step="0.01" value={p.percent} onChange={(e) => setPct(i, e.target.value)} className="w-24" />
+                <span className="text-sm text-muted-foreground">%</span>
+                {prizes.length > 1 && (
+                  <Button size="icon" variant="ghost" onClick={() => rmPrize(i)} className="h-7 w-7 ml-auto">×</Button>
+                )}
+              </div>
+            ))}
+          </div>
+          <div className={`text-xs ${Math.abs(totalPct - 100) > 0.01 ? 'text-destructive' : 'text-emerald-500'}`}>
+            Soma: {totalPct}% {Math.abs(totalPct - 100) > 0.01 ? '(deve ser 100%)' : '✓'}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex justify-end gap-2 mt-4 pt-4 border-t border-border/30">
+        <Button variant="ghost" onClick={onClose}>Cancelar</Button>
+        <Button variant="premium" onClick={save} disabled={busy}>{busy ? 'Salvando...' : 'Salvar alterações'}</Button>
+      </div>
+    </Card>
   );
 }
 
