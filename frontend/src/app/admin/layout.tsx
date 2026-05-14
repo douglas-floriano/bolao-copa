@@ -6,6 +6,7 @@ import { cn } from '@/lib/utils';
 const tabs = [
   { href: '/admin', label: 'Resultados' },
   { href: '/admin/users', label: 'Usuários' },
+  { href: '/admin/leagues', label: 'Ligas' },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
