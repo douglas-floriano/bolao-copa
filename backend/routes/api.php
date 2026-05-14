@@ -17,7 +17,7 @@ Route::post('auth/login',    [AuthController::class, 'login'])->middleware('thro
 Route::get('matches',         [MatchController::class, 'index']);
 Route::get('matches/{match}', [MatchController::class, 'show']);
 Route::get('standings',       [StandingsController::class, 'index']);
-Route::get('ranking',         [RankingController::class, 'global']);
+Route::get('ranking',         [RankingController::class, 'global'])->middleware('auth:sanctum');
 
 Route::middleware('auth:sanctum')->group(function () {
     Route::get('auth/me',    [AuthController::class, 'me']);

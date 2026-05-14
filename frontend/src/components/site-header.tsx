@@ -9,9 +9,9 @@ import { useAuth } from '@/store/auth';
 const publicNav = [
   { href: '/matches', label: 'Jogos' },
   { href: '/standings', label: 'Tabela' },
-  { href: '/ranking', label: 'Ranking' },
 ];
 const authNav = [
+  { href: '/ranking', label: 'Ranking' },
   { href: '/leagues', label: 'Ligas' },
   { href: '/dashboard', label: 'Meu Painel' },
 ];

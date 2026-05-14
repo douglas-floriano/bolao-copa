@@ -1,11 +1,13 @@
 'use client';
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Trophy, Medal, Award } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card } from '@/components/ui/card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { getEcho } from '@/lib/echo';
+import { useAuth } from '@/store/auth';
 
 type PrizeDetail = { league: string; position: number; amount: number };
 type Row = {
@@ -18,6 +20,8 @@ type Row = {
 const fmt = (n: number) => `R$ ${Number(n).toFixed(2).replace('.', ',')}`;
 
 export default function RankingPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [rows, setRows] = useState<Row[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -28,12 +32,15 @@ export default function RankingPage() {
   }
 
   useEffect(() => {
+    if (!user) { router.push('/login'); return; }
     load();
     const echo = getEcho();
     const ch = echo?.channel('championship.1');
     ch?.listen('.ranking.updated', load);
     return () => { ch?.stopListening('.ranking.updated'); };
-  }, []);
+  }, [user]);
+
+  if (!user) return null;
 
   return (
     <div className="space-y-6">
