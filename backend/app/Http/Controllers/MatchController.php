@@ -11,7 +11,12 @@ class MatchController extends Controller
     public function index(Request $r)
     {
         $champ = Championship::where('active', true)->firstOrFail();
-        $userId = auth('sanctum')->user()?->id;
+
+        $userId = null;
+        if ($bearer = $r->bearerToken()) {
+            $token = \Laravel\Sanctum\PersonalAccessToken::findToken($bearer);
+            $userId = $token?->tokenable_id;
+        }
 
         return MatchModel::with(['homeTeam', 'awayTeam', 'group'])
             ->withCount('predictions')
