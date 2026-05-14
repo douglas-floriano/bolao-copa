@@ -1,5 +1,6 @@
 'use client';
 import { useEffect, useState, useMemo } from 'react';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
 import { api } from '@/lib/api';
@@ -14,7 +15,7 @@ const phases: Record<string, string> = {
   quarter: 'Quartas', semi: 'Semifinal', third_place: '3º Lugar', final: 'Final',
 };
 
-type Team = { id: number; name: string; code: string };
+type Team = { id: number; name: string; code: string; flag: string };
 type Group = { id: number; name: string };
 type Match = {
   id: number; phase: string; status: string; kickoff_at: string; stadium: string;
@@ -182,12 +183,16 @@ function AdminMatchRow({ match, onUpdated }: { match: Match; onUpdated: (m: Matc
 
   return (
     <Card className="!p-4 flex items-center gap-3 flex-wrap">
-      <div className="flex-1 min-w-[260px]">
+      <div className="flex-1 min-w-[280px]">
         <div className="text-[10px] uppercase text-muted-foreground tracking-wider">
           {match.group ? `Grupo ${match.group.name} · ` : ''}{formatDate(match.kickoff_at)}
         </div>
-        <div className="font-bold">
-          {match.home_team?.name ?? '?'} <span className="text-muted-foreground">×</span> {match.away_team?.name ?? '?'}
+        <div className="font-bold flex items-center gap-2 mt-1">
+          {match.home_team?.flag && <Image src={match.home_team.flag} width={24} height={18} alt={match.home_team.code} className="rounded-sm shadow" unoptimized />}
+          <span>{match.home_team?.name ?? '?'}</span>
+          <span className="text-muted-foreground">×</span>
+          {match.away_team?.flag && <Image src={match.away_team.flag} width={24} height={18} alt={match.away_team.code} className="rounded-sm shadow" unoptimized />}
+          <span>{match.away_team?.name ?? '?'}</span>
         </div>
       </div>
       <Input inputMode="numeric" value={h} onChange={(e) => setH(clean(e.target.value))} className="w-16 text-center font-bold" placeholder="0" />
