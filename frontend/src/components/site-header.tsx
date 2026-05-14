@@ -38,12 +38,12 @@ export function SiteHeader() {
               {n.label}
             </Link>
           ))}
-          {user && authNav.map((n) => (
+          {mounted && user && authNav.map((n) => (
             <Link key={n.href} href={n.href} className="px-3 py-2 text-sm font-medium text-muted-foreground hover:text-foreground transition">
               {n.label}
             </Link>
           ))}
-          {user?.is_admin && (
+          {mounted && user?.is_admin && (
             <Link href="/admin" className="px-3 py-2 text-sm font-semibold text-accent">
               Admin
             </Link>
