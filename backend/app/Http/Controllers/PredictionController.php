@@ -15,6 +15,9 @@ class PredictionController extends Controller
 
     public function upsert(Request $r, MatchModel $match)
     {
+        if ($r->user()->is_admin) {
+            return response()->json(['message' => 'Administrador não pode palpitar.'], 403);
+        }
         if ($match->isLocked()) {
             return response()->json(['message' => 'Palpites encerrados para esta partida.'], 422);
         }

@@ -129,7 +129,8 @@ function MatchCard({ match, canPredict, onLocalSave }: { match: Match; canPredic
   const locked = new Date(match.kickoff_at).getTime() - Date.now() < 60 * 60 * 1000;
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
-  const canEdit = canPredict && !locked && !isFinished && match.home_team && match.away_team;
+  const isAdminUser = (useAuth.getState().user as any)?.is_admin;
+  const canEdit = canPredict && !isAdminUser && !locked && !isFinished && match.home_team && match.away_team;
 
   async function save() {
     setBusy(true);
@@ -183,6 +184,8 @@ function MatchCard({ match, canPredict, onLocalSave }: { match: Match; canPredic
         <div className="mt-auto pt-3 border-t border-border/40">
           {!canPredict ? (
             <div className="text-xs text-muted-foreground italic text-center py-2">Faça login para palpitar.</div>
+          ) : isAdminUser ? (
+            <div className="text-xs text-amber-500 italic text-center py-2">Administradores não palpitam.</div>
           ) : myPred && !editing ? (
             <div className={`rounded-xl p-3 flex items-center gap-3 ${
               isFinished
