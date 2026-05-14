@@ -68,7 +68,22 @@ export default function MatchesPage() {
       ) : (
         <div className="grid md:grid-cols-2 gap-4">
           <AnimatePresence>
-            {matches.map((m) => <MatchCard key={m.id} match={m} canPredict={!!user} onSaved={load} />)}
+            {matches.map((m) => (
+              <MatchCard
+                key={m.id}
+                match={m}
+                canPredict={!!user}
+                onLocalSave={(home, away) => {
+                  setMatches((prev) =>
+                    prev.map((x) =>
+                      x.id === m.id
+                        ? { ...x, predictions: [{ home_score: home, away_score: away, points: 0, exact: false, winner: false }] }
+                        : x,
+                    ),
+                  );
+                }}
+              />
+            ))}
           </AnimatePresence>
         </div>
       )}
@@ -81,7 +96,7 @@ function clean(v: string) {
   return s;
 }
 
-function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: boolean; onSaved: () => void }) {
+function MatchCard({ match, canPredict, onLocalSave }: { match: Match; canPredict: boolean; onLocalSave: (h: number, a: number) => void }) {
   const myPred = match.predictions?.[0];
   const [home, setHome] = useState(myPred ? String(myPred.home_score) : '');
   const [away, setAway] = useState(myPred ? String(myPred.away_score) : '');
@@ -101,13 +116,12 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
   async function save() {
     setBusy(true);
     try {
-      await api.put(`/matches/${match.id}/prediction`, {
-        home_score: Number(home),
-        away_score: Number(away),
-      });
-      toast.success('Palpite salvo!');
+      const h = Number(home);
+      const a = Number(away);
+      await api.put(`/matches/${match.id}/prediction`, { home_score: h, away_score: a });
+      toast.success(`Palpite ${match.home_team?.code} ${h}×${a} ${match.away_team?.code} salvo!`);
       setEditing(false);
-      onSaved();
+      onLocalSave(h, a);
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Erro ao salvar palpite.');
     } finally {
