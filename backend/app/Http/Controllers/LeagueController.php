@@ -10,6 +10,9 @@ class LeagueController extends Controller
 {
     public function index(Request $r)
     {
+        if ($r->user()->is_admin) {
+            return League::with('owner')->withCount('members')->latest()->get();
+        }
         return $r->user()->leagues()->with('owner')->get();
     }
 
