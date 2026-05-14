@@ -14,6 +14,7 @@ class DatabaseSeeder extends Seeder
             BracketSeeder::class,
             AchievementSeeder::class,
             AdminUserSeeder::class,
+            DemoUsersSeeder::class,
         ]);
     }
 }
