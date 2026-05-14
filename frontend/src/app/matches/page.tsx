@@ -1,5 +1,5 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Clock, MapPin, Lock } from 'lucide-react';
@@ -87,6 +87,13 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
   const [away, setAway] = useState(myPred ? String(myPred.away_score) : '');
   const [busy, setBusy] = useState(false);
 
+  useEffect(() => {
+    if (myPred) {
+      setHome(String(myPred.home_score));
+      setAway(String(myPred.away_score));
+    }
+  }, [myPred?.home_score, myPred?.away_score]);
+
   const locked = new Date(match.kickoff_at).getTime() - Date.now() < 60 * 60 * 1000;
   const isLive = match.status === 'live';
   const isFinished = match.status === 'finished';
@@ -99,7 +106,7 @@ function MatchCard({ match, canPredict, onSaved }: { match: Match; canPredict: b
         away_score: Number(away),
       });
       toast.success('Palpite salvo!');
-      setHome(''); setAway(''); onSaved();
+      onSaved();
     } catch (e: any) {
       toast.error(e?.response?.data?.message ?? 'Erro ao salvar palpite.');
     } finally {
