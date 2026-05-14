@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { toast } from 'sonner';
-import { Trash2, UserPlus, Shield, Search } from 'lucide-react';
+import { Trash2, UserPlus, Shield, Search, Lock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { Card, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -108,23 +108,35 @@ export default function AdminUsersPage() {
               </tr>
             </thead>
             <tbody>
-              {users.map((u) => (
+              {users.map((u) => {
+                const protectedUser = u.email === 'admin@bolaocopa.local';
+                return (
                 <tr key={u.id} className="border-b border-border/20 hover:bg-muted/20">
-                  <td className="py-3 font-medium">{u.name}</td>
+                  <td className="py-3 font-medium flex items-center gap-2">
+                    {u.name}
+                    {protectedUser && <Lock className="h-3 w-3 text-amber-500" />}
+                  </td>
                   <td className="text-muted-foreground">{u.email}</td>
                   <td className="text-center">{u.level}</td>
                   <td className="text-center">
-                    <button onClick={() => toggleAdmin(u)} className="inline-flex">
+                    <button
+                      onClick={() => !protectedUser && toggleAdmin(u)}
+                      disabled={protectedUser}
+                      className="inline-flex disabled:cursor-not-allowed"
+                      title={protectedUser ? 'Conta protegida' : 'Alternar admin'}
+                    >
                       <Shield className={`h-5 w-5 ${u.is_admin ? 'text-accent' : 'text-muted-foreground/30'}`} />
                     </button>
                   </td>
                   <td className="text-right">
-                    <Button variant="ghost" size="icon" onClick={() => remove(u)}>
-                      <Trash2 className="h-4 w-4 text-destructive" />
-                    </Button>
+                    {!protectedUser && (
+                      <Button variant="ghost" size="icon" onClick={() => remove(u)}>
+                        <Trash2 className="h-4 w-4 text-destructive" />
+                      </Button>
+                    )}
                   </td>
                 </tr>
-              ))}
+              );})}
               {users.length === 0 && (
                 <tr><td colSpan={5} className="text-center py-8 text-muted-foreground">Nenhum usuário encontrado.</td></tr>
               )}

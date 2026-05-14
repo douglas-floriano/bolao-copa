@@ -39,6 +39,14 @@ class AdminUserController extends Controller
             'password' => 'sometimes|string|min:8',
             'is_admin' => 'sometimes|boolean',
         ]);
+
+        if ($this->isProtected($user) && array_key_exists('is_admin', $data) && !$data['is_admin']) {
+            return response()->json(['message' => 'Conta protegida: não é possível remover admin do usuário raiz.'], 422);
+        }
+        if ($this->isProtected($user) && isset($data['email']) && $data['email'] !== $user->email) {
+            return response()->json(['message' => 'Conta protegida: e-mail não pode ser alterado.'], 422);
+        }
+
         $user->update($data);
         audit('user.update', $user, $data);
         return $user;
@@ -49,8 +57,16 @@ class AdminUserController extends Controller
         if ($user->id === auth()->id()) {
             return response()->json(['message' => 'Não pode excluir a si mesmo.'], 422);
         }
+        if ($this->isProtected($user)) {
+            return response()->json(['message' => 'Conta protegida: não pode ser excluída.'], 422);
+        }
         $user->delete();
         audit('user.delete', $user);
         return response()->noContent();
+    }
+
+    private function isProtected(User $user): bool
+    {
+        return $user->email === 'admin@bolaocopa.local';
     }
 }
