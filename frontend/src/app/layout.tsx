@@ -2,7 +2,7 @@ import type { Metadata } from 'next';
 import './globals.css';
 import { ThemeProvider } from '@/components/theme-provider';
 import { SiteHeaderDynamic } from '@/components/site-header-client';
-import { Toaster } from 'sonner';
+import { ToasterDynamic } from '@/components/toaster-client';
 
 export const metadata: Metadata = {
   title: 'Bolão Copa do Mundo 2026',
@@ -18,7 +18,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
             <SiteHeaderDynamic />
             <main className="container py-8">{children}</main>
           </div>
-          <Toaster richColors position="top-right" />
+          <ToasterDynamic richColors position="top-right" />
         </ThemeProvider>
       </body>
     </html>
