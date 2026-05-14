@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AchievementSeeder::class,
             AdminUserSeeder::class,
             DemoUsersSeeder::class,
+            TranslateTeamsSeeder::class,
         ]);
     }
 }
