@@ -21,7 +21,10 @@ class AchievementSeeder extends Seeder
             ['leader',             'Líder',                     'Já liderou o ranking por pelo menos 1 dia.',        'flag',      300],
         ];
         foreach ($list as [$code, $name, $desc, $icon, $xp]) {
-            Achievement::updateOrCreate(['code' => $code], compact('name', 'desc', 'icon', 'xp') + ['description' => $desc, 'xp_reward' => $xp]);
+            Achievement::updateOrCreate(
+                ['code' => $code],
+                ['name' => $name, 'description' => $desc, 'icon' => $icon, 'xp_reward' => $xp],
+            );
         }
     }
 }

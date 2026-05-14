@@ -8,5 +8,5 @@ class Achievement extends Model
 {
     protected $fillable = ['code', 'name', 'description', 'icon', 'xp_reward'];
 
-    public function users() { return $this->belongsToMany(User::class)->withTimestamps(); }
+    public function users() { return $this->belongsToMany(User::class)->withPivot('unlocked_at'); }
 }

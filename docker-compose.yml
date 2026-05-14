@@ -87,7 +87,7 @@ services:
     volumes:
       - ./frontend:/app
     ports:
-      - "3000:3000"
+      - "3100:3000"
     networks: [bolao]
 
 volumes:

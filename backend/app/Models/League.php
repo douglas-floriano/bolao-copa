@@ -19,5 +19,5 @@ class League extends Model
 
     public function owner() { return $this->belongsTo(User::class, 'owner_id'); }
     public function championship() { return $this->belongsTo(Championship::class); }
-    public function members() { return $this->belongsToMany(User::class)->withTimestamps(); }
+    public function members() { return $this->belongsToMany(User::class)->withPivot('joined_at'); }
 }

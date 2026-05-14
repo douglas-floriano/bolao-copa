@@ -20,8 +20,8 @@ class User extends Authenticatable
     ];
 
     public function predictions() { return $this->hasMany(Prediction::class); }
-    public function leagues() { return $this->belongsToMany(League::class)->withTimestamps(); }
-    public function achievements() { return $this->belongsToMany(Achievement::class)->withTimestamps(); }
+    public function leagues() { return $this->belongsToMany(League::class)->withPivot('joined_at'); }
+    public function achievements() { return $this->belongsToMany(Achievement::class)->withPivot('unlocked_at'); }
 
     public function totalPoints(?int $championshipId = null): int
     {
