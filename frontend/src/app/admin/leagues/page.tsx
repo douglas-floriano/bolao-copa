@@ -66,7 +66,7 @@ export default function AdminLeaguesPage() {
             const isOpen = !!open[l.id];
             const rank = rankings[l.id] ?? [];
             const pool = rank.reduce((s, r) => s + Number(r.entry_paid || 0), 0);
-            const paidCount = rank.filter((r) => r.paid).length;
+            const paidCount = rank.filter((r) => Number(r.entry_paid) > 0).length;
             return (
               <Card key={l.id} className="!p-0 overflow-hidden">
                 <button
@@ -124,8 +124,8 @@ export default function AdminLeaguesPage() {
                                   <td className="font-medium">{r.name} <span className="text-xs text-muted-foreground">· nv {r.level}</span></td>
                                   <td className="text-right font-bold text-primary">{r.points}</td>
                                   <td className="text-center">
-                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${r.paid ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}>
-                                      {fmt(Number(r.entry_paid))}
+                                    <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold ${Number(r.entry_paid) > 0 ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                                      {Number(r.entry_paid) > 0 ? fmt(Number(r.entry_paid)) : 'pendente'}
                                     </span>
                                   </td>
                                   <td className="text-right pr-2 font-black text-gold">

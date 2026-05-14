@@ -57,7 +57,7 @@ export default function LeagueDetailPage() {
 
   if (!user || !data) return <div className="text-center py-12 text-muted-foreground">Carregando...</div>;
 
-  const totalPaid = rank.filter((r) => r.paid).length;
+  const totalPaid = rank.filter((r) => Number(r.entry_paid) > 0).length;
   const myRow = rank.find((r) => r.id === user.id);
 
   return (
@@ -199,8 +199,8 @@ export default function LeagueDetailPage() {
                     </td>
                     <td className="text-right font-black text-primary">{r.points}</td>
                     <td className="text-center">
-                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${r.paid ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}>
-                        {fmt(Number(r.entry_paid))} {r.paid ? '✓ pago' : 'pendente'}
+                      <span className={`text-[10px] px-2 py-1 rounded-full font-bold ${Number(r.entry_paid) > 0 ? 'bg-emerald-500/20 text-emerald-500' : 'bg-amber-500/20 text-amber-500'}`}>
+                        {Number(r.entry_paid) > 0 ? `✓ ${fmt(Number(r.entry_paid))}` : 'pendente'}
                       </span>
                     </td>
                     <td className="text-right pr-2 font-black text-gold">
@@ -324,22 +324,21 @@ function LeagueEditor({ league, onClose, onSaved }: { league: any; onClose: () =
 function PayEditor({ leagueId, row, onSaved }: { leagueId: number; row: RankRow; onSaved: () => void }) {
   const [open, setOpen] = useState(false);
   const [val, setVal] = useState(String(row.entry_paid ?? 0));
-  const [paid, setPaid] = useState(row.paid);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     setVal(String(row.entry_paid ?? 0));
-    setPaid(row.paid);
-  }, [row.entry_paid, row.paid]);
+  }, [row.entry_paid]);
 
   async function save() {
     setBusy(true);
     try {
+      const v = Number(val || 0);
       await api.put(`/leagues/${leagueId}/members/${row.id}/payment`, {
-        entry_paid: Number(val || 0),
-        paid,
+        entry_paid: v,
+        paid: v > 0,
       });
-      toast.success(`${row.name}: ${fmt(Number(val))}${paid ? ' (pago)' : ''}`);
+      toast.success(`${row.name}: ${fmt(v)}`);
       setOpen(false);
       onSaved();
     } catch (e: any) {
@@ -367,10 +366,6 @@ function PayEditor({ leagueId, row, onSaved }: { leagueId: number; row: RankRow;
         className="w-24 h-8 text-xs text-right"
         autoFocus
       />
-      <label className="flex items-center gap-1 text-[10px] cursor-pointer select-none px-1">
-        <input type="checkbox" checked={paid} onChange={(e) => setPaid(e.target.checked)} />
-        pago
-      </label>
       <Button size="sm" variant="premium" onClick={save} disabled={busy} className="h-8 px-2">✓</Button>
       <Button size="sm" variant="ghost" onClick={() => setOpen(false)} className="h-8 px-2">✗</Button>
     </div>
